@@ -14,6 +14,9 @@ class PoseDetector {
         this.detector = null;
     }
 
+    /**
+     * Initialise the detector tensorflow model.
+     */
     async init() {
         await tf.setBackend('webgl');
         this.detector = await poseDetection.createDetector(
@@ -21,9 +24,15 @@ class PoseDetector {
             CONFIG);
     }
 
+    /**
+     * Detect a person inside of an image.
+     * @param {PixelInput} image - image that contains a person to detect
+     * @returns - an array of vertices with their score 
+     */
     async detect(image) {
+        if (this.detector === null) return [];
         const mesh = await this.detector.estimatePoses(image);
-        return mesh[0];
+        return mesh[0].keypoints;
     }
 };
 
