@@ -1,7 +1,6 @@
-import { RefObject } from "react";
+import fistSrc from "../img/pixel-fist.png";
+import faceSrc from "../img/surprised.png";
 
-// List of valid edges in the mesh
-// todo: switch to names for clarity
 const EDGE_LIST = [
     ["nose", "left_eye"],
     ["nose", "right_eye"],
@@ -28,6 +27,22 @@ class Renderer {
      */
     constructor(canvasRef) {
         this.ctx = canvasRef.current.getContext("2d");
+        this.fistImg = new Image();
+        this.fistImg.src = fistSrc;
+        this.fistImg.onload = function () {
+            console.log("Fist Image loaded successfully!");
+        }
+        this.fistImg.onerror = function () {
+            console.error("Fist Image failed to load!");
+        }
+        this.faceImg = new Image();
+        this.faceImg.src = faceSrc;
+        this.faceImg.onload = function () {
+            console.log("Face Image loaded successfully!");
+        }
+        this.faceImg.onerror = function () {
+            console.error("Face Image failed to load!");
+        }
     }
 
     /**
@@ -36,13 +51,14 @@ class Renderer {
      */
     renderBodyMesh(mesh) {
 
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "#282c34";
+        this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+
         if (mesh?.length === 0) return;
 
-        this.ctx.beginPath();
-        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-
         EDGE_LIST.forEach((edge) => {
-            const meshEdge = mesh.filter((vertex) => {return vertex.name === edge[0] || vertex.name === edge[1];});
+            const meshEdge = mesh.filter((vertex) => { return vertex.name === edge[0] || vertex.name === edge[1]; });
             this.renderEdge(meshEdge, '#FFFFFF');
         });
 
@@ -50,6 +66,14 @@ class Renderer {
         mesh.forEach((vertex) => {
             this.renderVertex(vertex);
         });
+
+        this.renderFist(mesh.filter((vertex) => { return vertex.name === 'left_wrist'; })[0],
+            mesh.filter((vertex) => { return vertex.name === 'left_elbow'; })[0], false, 80);
+
+        this.renderFist(mesh.filter((vertex) => { return vertex.name === 'right_wrist'; })[0],
+            mesh.filter((vertex) => { return vertex.name === 'right_elbow'; })[0], true, 80);
+
+        this.renderFace(mesh.filter((vertex) => { return vertex.name === 'nose'; })[0], 120);
     }
 
     /**
@@ -75,6 +99,23 @@ class Renderer {
             this.ctx.strokeStyle = color;
             this.ctx.stroke();
         }
+    }
+
+    renderFist(handVertex, elbowVertex, isRight, dimension) {
+        this.ctx.save();
+        const factor = isRight ? -1 : 1;
+        this.ctx.scale(factor, 1);
+        this.ctx.translate(factor * handVertex.x, handVertex.y);
+        const angle = Math.atan2(handVertex.y - elbowVertex.y,
+            factor * (handVertex.x - elbowVertex.x));
+        this.ctx.rotate(angle);
+        this.ctx.drawImage(this.fistImg, 0, 0, dimension, dimension);
+        this.ctx.restore();
+    }
+
+    renderFace(noseVertex, dimension) {
+        this.ctx.drawImage(this.faceImg, noseVertex.x - dimension / 2, 
+        noseVertex.y - dimension / 2, dimension, dimension);
     }
 };
 

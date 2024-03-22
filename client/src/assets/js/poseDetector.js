@@ -32,7 +32,10 @@ class PoseDetector {
     async detect(image) {
         if (this.detector === null) return [];
         const mesh = await this.detector.estimatePoses(image);
-        return mesh[0].keypoints;
+        if (mesh.length !== 0)
+            return mesh[0].keypoints;
+        else
+            return mesh;
     }
 };
 
